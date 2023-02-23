@@ -1,5 +1,5 @@
 ## What are these files
-- `.env` - environmental variables for API keys, GCS, MongoDB authentication. 
+- `.env` - environmental variables for API keys, GCS, MongoDB authentication
 - `user_definition.py` - miscellaneous variables
 - `openweather.py` - helper functions for fetching location data from Open Weather
 - `visualcrossing.py` - helper functions for fetching historical weather data from Visual Crossing
