@@ -20,6 +20,8 @@ def fetch_visualcrossing_history(last_fetch_date_map, api_key, test=True): # tes
         try:
             last_date = datetime.strptime(
                 last_date, "%Y-%m-%d") + timedelta(days=1)
+            if last_date >= dt(2022, 12, 31): #! tbd: set as a variable
+                continue
             end_date = (
                 _last_day_of_month(last_date)
                 if not test
@@ -73,6 +75,8 @@ def read_last_fetch_date_map(
         last_fetch_date_map = json.loads(json_str)
         new_last_fetch_date_map = {
             eval(k): v for k, v in last_fetch_date_map.items()}
+        new_last_fetch_date_map.update(
+            _check_new_locations(new_last_fetch_date_map))
         return new_last_fetch_date_map
     else:
         # if the file does not exist, create one
@@ -83,6 +87,13 @@ def read_last_fetch_date_map(
         )
         return last_fetch_date
 
+def _check_new_locations(last_fetch_date_map):
+    """Check whether new (lat, lon) pairs are added in user_definition.py."""
+    new_loc_dict = {}
+    for pair in LAT_LON_TUPLE:
+        if pair not in last_fetch_date_map:
+            new_loc_dict[pair] = "2022-01-01"
+    return new_loc_dict
 
 def update_last_fetch_date_map(
     last_fetch_date_map,
