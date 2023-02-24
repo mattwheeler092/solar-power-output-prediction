@@ -1,7 +1,28 @@
+import os
 import calendar
+import pandas as pd
 
 from datetime import datetime, timedelta
-from config import DATE_FORMAT, WEATHER_API_KEY
+from config import (
+    DATE_FORMAT, 
+    WEATHER_API_KEY, 
+    LOCATION_DATA_FILE_NAME,
+    GCP_DATA_FOLDER
+)
+
+def load_location_data():
+    """ Function to lat / lon values from locations csv """
+    locations_df = pd.read_csv(LOCATION_DATA_FILE_NAME)
+    return locations_df[['lat', 'lon']].values
+
+def generate_gcp_filename(lat, lon, start):
+    """ Function to construct the GCP file name 
+    for a given lat /lon location and date """
+    date = datetime.strptime(start, DATE_FORMAT)
+    month = str(date.month).rjust(2, '0')
+    year = str(date.year)
+    file_name = f'vc_{lat}_{lon}_{year}_{month}.csv'
+    return os.path.join(GCP_DATA_FOLDER, file_name)
 
 
 def increment_date(date, num_days):
