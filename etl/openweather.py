@@ -23,17 +23,3 @@ def fetch_openweather_locations(locations, api_key):
         except:
             errors.append((lat, lon))
     return pd.DataFrame(result), errors
-
-
-def write_csv_to_gcs(bucket_name, blob_name, service_account_key_file, df):
-    """Write and read a blob from GCS using file-like IO"""
-    client = storage.Client.from_service_account_json(service_account_key_file)
-    bucket = client.get_bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    # write df to a temporary file object
-    temp_buffer = io.StringIO()
-    df.to_csv(temp_buffer, index=False)
-    # upload temporary file object
-    temp_buffer.seek(0)
-    blob.upload_from_file(temp_buffer, content_type='text/csv')
-            
