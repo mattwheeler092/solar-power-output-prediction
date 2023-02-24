@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv
+import pandas as pd
 
 
-# load .env variables
+# Env variables ------------------------------------------------------
 load_dotenv()
 OW_API_KEY = os.getenv("OW_API_KEY")
 VC_API_KEY = os.getenv("VC_API_KEY")
@@ -14,18 +15,25 @@ MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
 MONGO_USERNAME = os.getenv("MONGO_USERNAME")
 MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
 
+# Airflow variables ------------------------------------------------------
+SCHEDULE_INTERVAL = "0 */3 * * *"
+
+
 # API call variables ----------------------------------------------------
 
 # (latitude, longitude) pairs
-# with open("locations.csv", "r") as f:
-#     data = f.read().split("\n")
-#     LAT_LON_TUPLE = [tuple(float(j) for j in i.split(",")) for i in data[1:]]
-LAT_LON_TUPLE = [
-    (34.582769, -117.409214),
-    (37.765206, -122.241636),
-    (41.487114, -120.542456),
-    (38.419356, -120.824103),
-]
+LIMIT = 5 #! how many locations to fetch data of
+dir_path = os.path.dirname(os.path.realpath(__file__))
+try:
+    locations = pd.read_csv(os.path.join(dir_path, "locations.csv"))
+    LAT_LON_TUPLE = [tuple(i) for i in locations[['lat', 'lat']].values][:LIMIT]
+except:
+    LAT_LON_TUPLE = [(34.1139, 34.1139),
+                    (37.7562, 37.7562),
+                    (32.8312, 32.8312),
+                    (33.9381, 33.9381),
+                    (38.5667, 38.5667)
+    ]
 
 # GCS variables -------------------------------------------------------
 
