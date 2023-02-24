@@ -29,7 +29,7 @@ def get_visualcrossing_history(execution_date, **context):
     """Fetch data from Visual Crossing API and save as a CSV to GCS"""
     timestamp = str(int(execution_date.timestamp()))
     df_list, errors, new_last_fetch_date_map = fetch_visualcrossing_history(
-        last_fetch_date_map, VC_API_KEY, test=True
+        last_fetch_date_map, VC_API_KEY, test=IS_TEST
     )
     for coordinate, last_date, df in df_list:
         # file name format: VC_lat_lon_lastFetchDate.csv
@@ -43,10 +43,15 @@ def get_visualcrossing_history(execution_date, **context):
 
 def get_openweather_locations():
     """Fetch location data based on coordinates from Open Weather API and save as a CSV file to GCS"""
-    locations = LAT_LON_TUPLE
-    df, errors = fetch_openweather_locations(locations, OW_API_KEY)
-    blob_name = f"OW_coordinate_location.csv"
-    write_csv_to_gcs(GS_BUCKET_NAME, blob_name, GS_SERVICE_ACCOUNT_KEY_FILE, df)
+    try:
+        locations = LAT_LON_TUPLE
+        df, errors = fetch_openweather_locations(locations, OW_API_KEY)
+        blob_name = f"OW_coordinate_location.csv"
+        write_csv_to_gcs(GS_BUCKET_NAME, blob_name, GS_SERVICE_ACCOUNT_KEY_FILE, df)
+    except UnicodeEncodeError:
+        print("Unicode Error while saving to GCS.", df.name.values, df.country.values, df.state.values)
+    except:
+        print("Unknown error")
 
 def transform_load(execution_date, **context):
     """Wrapper of transform_load.py"""
