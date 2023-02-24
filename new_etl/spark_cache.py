@@ -1,7 +1,7 @@
 import json
 
 from gcp_bucket import GCP_Bucket
-from user_definision import SPARK_CACHE_FILE_NAME
+from config import SPARK_CACHE_FILE_NAME
 
 class SparkCache:
     """ Class to load and update the spark cache which 
@@ -12,15 +12,16 @@ class SparkCache:
         """ Initialiser loads spark cache file from GCP if it 
         exists. If not then it creates an empty cache that 
         is then uploaded to GCP """
-        # Initialise GCP bucket class
+        # Initialise GCP bucket object
         self.bucket = GCP_Bucket()
         # If cache file exists load from GCP
         if self.bucket.check_file_exists(SPARK_CACHE_FILE_NAME):
             self.cache = self.bucket.load_file(SPARK_CACHE_FILE_NAME)
         # If cache doesn't exist upload empty json to GCP
-        else:  
+        else:
             self.cache = {"files": []}
             self.update_cache()
+
 
     def list_cached_files(self):
         """ Generator function that lists the current files 
@@ -34,6 +35,7 @@ class SparkCache:
             # Remove file from cache once processed
             self.remove_file(file_name)
 
+
     def add_file(self, file_name):
         """ Function to add a new file to the cached 
         file list. Once added, the updated cache is 
@@ -42,6 +44,7 @@ class SparkCache:
         self.cache["files"].append(file_name)
         self.update_cache()
 
+
     def remove_file(self, file_name):
         """ Function to remove file from cached 
         file list. Once removed, the updated cache 
@@ -49,6 +52,7 @@ class SparkCache:
         idx = self.cache["files"].index(file_name)
         self.cache["files"].pop(idx)
         self.update_cache()
+
 
     def update_cache(self):
         """ Function to upload the newly updated 

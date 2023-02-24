@@ -3,7 +3,7 @@ import io
 import pandas as pd
 
 from google.cloud import storage
-from user_definision import GS_BUCKET, GS_SERVICE_KEY
+from config import GS_BUCKET, GS_SERVICE_KEY
 
 
 class FileTypeError(Exception):
@@ -20,11 +20,13 @@ class GCP_Bucket:
         self.client = storage.Client.from_service_account_json(GS_SERVICE_KEY)
         self.bucket = self.client.get_bucket(GS_BUCKET)
 
+
     def check_file_exists(self, file_name):
         """Function to check if a file exists
         within the GCP bucket"""
         blob = self.bucket.blob(file_name)
         return blob.exists()
+
 
     def load_file(self, file_name, file_type):
         """Function to load either a JSON or CSV file to 
@@ -41,6 +43,7 @@ class GCP_Bucket:
         else:
             msg = "'file_type' != 'csv' or 'json"
             raise FileTypeError(msg)
+
 
     def upload_file(self, data, file_name, file_type, overwrite=False):
         """Function to upload either a JSON or CSV file to 

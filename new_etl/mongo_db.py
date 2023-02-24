@@ -1,7 +1,7 @@
 import os
 
 import pymongo
-from user_definision import (
+from config import (
     MONGO_COLLECTION,
     MONGO_DB,
     MONGO_IP,

@@ -29,5 +29,5 @@ COLLECTION_CACHE_FILE_NAME = "collection_cache.json"
 # Define the spark cache filename
 SPARK_CACHE_FILE_NAME = "spark_cache.json"
 
-# Define how many weather months to process per airflow job
-NUM_MONTHS_TO_PROCESS_PER_JOB = 400
+# Define how many months of weather data to collect per airflow job
+NUM_MONTHS_TO_PROCESS_PER_JOB = 200

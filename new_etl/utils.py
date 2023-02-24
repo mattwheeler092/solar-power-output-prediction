@@ -1,7 +1,7 @@
 import calendar
 
 from datetime import datetime, timedelta
-from user_definision import DATE_FORMAT, WEATHER_API_KEY
+from config import DATE_FORMAT, WEATHER_API_KEY
 
 
 def increment_date(date, num_days):
