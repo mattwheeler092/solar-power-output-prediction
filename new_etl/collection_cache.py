@@ -8,7 +8,7 @@ from config import (
 )
 
 class CollectionCache:
-    """ Class to load and update collection cache that keeps
+    """ Class to load and update data collection cache that keeps
         track of which latitude / longitude locations have
         had weather information collected. Holds information
         of the most recent data collection date """
@@ -28,13 +28,13 @@ class CollectionCache:
             self.update_cache()
 
 
-    def location_date_generator(self, locations):
+    def generator(self, locations):
         """ Generator that yields (lat, lon, start, end) combinations. 
         Once a combination has been successfully yielded, it updates 
         the cache which is then uploaded to GCP. Function to limited 
         to return a maximum of 'NUM_MONTHS_TO_PROCESS_PER_JOB' 
         combinations. """
-        processed_months = 0
+        months_processed = 0
         # Loop through each of the provided locations
         for lat, lon in locations:
             # Yield start / end dates until collection is complete
@@ -44,8 +44,8 @@ class CollectionCache:
                 # Update cache with newest collection date
                 self.update_collection_date(lat, lon, end)
                 # Increment processed count end if limit reached
-                processed_months += 1
-                if processed_months == NUM_MONTHS_TO_PROCESS_PER_JOB:
+                months_processed += 1
+                if months_processed == NUM_MONTHS_TO_PROCESS_PER_JOB:
                     return
 
 

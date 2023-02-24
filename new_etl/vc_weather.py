@@ -1,6 +1,27 @@
 import pandas as pd
+import requests
 
-from utils import flatten_json
+from utils import flatten_json, generate_api_query
+
+
+class FailedApiRequest(Exception):
+    """ Class to capture cases when API requests to 
+    the Visual Crossing weather service fail """
+
+
+def collect_api_data(lat, lon, start, end):
+    """ Function to make API requestion for specific 
+    lat /lon location and specific date range. Also 
+    process API response and returns a pandas dataframe """
+    # Generate API query and make request
+    api_query = generate_api_query(lat, lon, start, end)
+    response = requests.get(api_query)
+    # Raise error if API request fails
+    if response.status_code != 200:
+        raise FailedApiRequest
+    # Else extract, process, and return API data
+    data = response.json()
+    return process_response_json(data)
 
 
 def process_response_json(json):

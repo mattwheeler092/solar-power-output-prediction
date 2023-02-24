@@ -23,11 +23,17 @@ END_DATE = "2022-12-31"
 # Define the project date format
 DATE_FORMAT = "%Y-%m-%d"
 
-# Define the collection cache filename
+# Define the location of the csv containing the lat / lon coordinates
+LOCATION_DATA_FILE_NAME = "locations.csv"
+
+# Define the collection cache GCP filename
 COLLECTION_CACHE_FILE_NAME = "collection_cache.json"
 
-# Define the spark cache filename
+# Define the spark cache GCP filename
 SPARK_CACHE_FILE_NAME = "spark_cache.json"
+
+# Define weather data GCP folder name
+GCP_DATA_FOLDER = "data"
 
 # Define how many months of weather data to collect per airflow job
 NUM_MONTHS_TO_PROCESS_PER_JOB = 200
