@@ -15,7 +15,9 @@ from user_definition import (
     GS_BUCKET_NAME,
     GS_SERVICE_ACCOUNT_KEY_FILE,
     LAT_LON_TUPLE,
+    SCHEDULE_INTERVAL
 )
+from transform_load import transform_load_to_mongo
 
 client = storage.Client.from_service_account_json(GS_SERVICE_ACCOUNT_KEY_FILE)
 last_fetch_date_map = read_last_fetch_date_map(
@@ -23,14 +25,16 @@ last_fetch_date_map = read_last_fetch_date_map(
 )
 
 
-def get_visualcrossing_history():
+def get_visualcrossing_history(execution_date, **context):
     """Fetch data from Visual Crossing API and save as a CSV to GCS"""
+    timestamp = str(int(execution_date.timestamp()))
     df_list, errors, last_fetch_date_map = fetch_visualcrossing_history(
         last_fetch_date_map, VC_API_KEY
     )
     for coordinate, last_date, df in df_list:
         # file name format: VC_lat_lon_lastFetchDate.csv
-        blob_name = f"VC_{coordinate[0]}_{coordinate[1]}_{last_date}.csv"
+        file_name = f"VC_{coordinate[0]}_{coordinate[1]}_{last_date}.csv"
+        blob_name = os.path.join(timestamp, file_name)
         write_csv_to_gcs(GS_BUCKET_NAME, blob_name, GS_SERVICE_ACCOUNT_KEY_FILE, df)
     update_last_fetch_date_map(
         last_fetch_date_map, GS_BUCKET_NAME, GS_SERVICE_ACCOUNT_KEY_FILE
@@ -44,6 +48,11 @@ def get_openweather_locations():
     blob_name = f"OW_coordinate_location.csv"
     write_csv_to_gcs(GS_BUCKET_NAME, blob_name, GS_SERVICE_ACCOUNT_KEY_FILE, df)
 
+def transform_load(execution_date, **context):
+    """Wrapper of transform_load.py"""
+    timestamp = str(int(execution_date.timestamp()))
+    transform_load_to_mongo(folder=timestamp)
+
 
 # default arguments for the DAG
 default_args = {
@@ -55,16 +64,18 @@ default_args = {
 
 # define the DAG
 dag = DAG(
-    "vc_agin",
+    "historical_weather_etl",
     default_args=default_args,
     description="ETL pipeline of historical weather data",
-    schedule_interval="0 */3 * * *",  # run every 3 hours
+    schedule_interval=SCHEDULE_INTERVAL,  # run every 3 hours
+    catchup=False
 )
 
 # operator to fetch data from VC
 fetch_history_operator = PythonOperator(
     task_id="get_visualcrossing_history",
     python_callable=get_visualcrossing_history,
+    provide_context=True,
     dag=dag,
 )
 
@@ -76,18 +87,26 @@ fetch_location_operator = PythonOperator(
 )
 
 # operator for spark job
-transform_load_operator = SparkSubmitOperator(
-    task_id="spark_transform_load",
-    packages="com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17,org.mongodb.spark:mongo-spark-connector_2.12:3.0.1",
-    exclude_packages="javax.jms:jms,com.sun.jdmk:jmxtools,com.sun.jmx:jmxri",
-    conf={
-        "spark.driver.userClassPathFirst": True,
-        "spark.executor.userClassPathFirst": True,
-    },
-    verbose=True,
-    application="transform_load.py",
-    dag=dag,
+transform_load_operator = PythonOperator(
+    task_id='spark_transform_load',
+    python_callable=transform_load,
+    provide_context=True,
+    dag=dag
 )
+
+# transform_load_operator = SparkSubmitOperator(
+#     task_id="spark_transform_load",
+#     packages="com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17,org.mongodb.spark:mongo-spark-connector_2.12:3.0.1",
+#     exclude_packages="javax.jms:jms,com.sun.jdmk:jmxtools,com.sun.jmx:jmxri",
+#     conf={
+#         "spark.driver.userClassPathFirst": True,
+#         "spark.executor.userClassPathFirst": True,
+#     },
+#     verbose=True,
+#     application="transform_load.py",
+#     dag=dag,
+# )
+
 
 
 [fetch_history_operator, fetch_location_operator] >> transform_load_operator

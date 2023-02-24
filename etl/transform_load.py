@@ -10,14 +10,14 @@ from user_definition import *
 
 
 def read_weather_history_data(
-    spark, path="gs://msds697-solar", file_name_regex=VC_DATA_FILENAME_REGEX
+    spark, folder="", path="gs://msds697-solar", file_name_regex=VC_DATA_FILENAME_REGEX
 ):
     """Read weather history CSV from GCS into spark"""
     df = (
         spark.read.format("csv")
         .option("header", "true")
         .option("inferSchema", "true")
-        .load(os.path.join(path, file_name_regex))
+        .load(os.path.join(path, folder, file_name_regex))
     )
     return df
 
@@ -53,7 +53,7 @@ def read_location_data(spark, path="gs://msds697-solar"):
     return df
 
 
-def transform_load_to_mongo():
+def transform_load_to_mongo(folder=""):
     """Main function for transforming the data and loading the resulting aggregates to MongoDB."""
     spark = SparkSession.builder.getOrCreate()
     conf = spark.sparkContext._jsc.hadoopConfiguration()
@@ -67,7 +67,7 @@ def transform_load_to_mongo():
     )
 
     # transform
-    weather_df = read_weather_history_data(spark)
+    weather_df = read_weather_history_data(spark, folder)
     weather_df = convert_datetime(weather_df)
     weather_df = drop_columns(weather_df, columns=["weather_id", "weather_icon"])
     weather_df = rename_columns(
