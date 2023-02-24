@@ -18,9 +18,8 @@ def fetch_visualcrossing_history(last_fetch_date_map, api_key, test=True): # tes
     errors = []
     for (lat, lon), last_date in last_fetch_date_map.items():
         try:
-            last_date = datetime.strptime(
-                last_date, "%Y-%m-%d") + timedelta(days=1)
-            if last_date >= dt(2022, 12, 31): #! tbd: set as a variable
+            last_date = datetime.strptime(last_date, "%Y-%m-%d") + timedelta(days=1)
+            if last_date >= datetime.strptime(DEFAULT_LAST_DATE, "%Y-%m-%d"):
                 continue
             end_date = (
                 _last_day_of_month(last_date)
@@ -81,7 +80,7 @@ def read_last_fetch_date_map(
     else:
         # if the file does not exist, create one
         locations = LAT_LON_TUPLE
-        last_fetch_date = {l: "2022-01-01" for l in locations}
+        last_fetch_date = {l: DEFAULT_START_DATE for l in locations}
         update_last_fetch_date_map(
             last_fetch_date, bucket_name, service_account_key_file, file_name
         )
@@ -92,7 +91,7 @@ def _check_new_locations(last_fetch_date_map):
     new_loc_dict = {}
     for pair in LAT_LON_TUPLE:
         if pair not in last_fetch_date_map:
-            new_loc_dict[pair] = "2022-01-01"
+            new_loc_dict[pair] = DEFAULT_START_DATE
     return new_loc_dict
 
 def update_last_fetch_date_map(

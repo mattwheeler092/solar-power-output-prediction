@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 import pandas as pd
 
+# !!!TESTING or FOR REAL!!!
+IS_TEST=True
 
 # Env variables ------------------------------------------------------
 load_dotenv()
@@ -20,6 +22,10 @@ SCHEDULE_INTERVAL = "0 */3 * * *"
 
 
 # API call variables ----------------------------------------------------
+
+# start date & last date of historical weather data
+DEFAULT_START_DATE = "2022-01-01"
+DEFAULT_LAST_DATE = "2022-12-31"
 
 # (latitude, longitude) pairs
 LIMIT = 5 #! how many locations to fetch data of
