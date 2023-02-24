@@ -1,10 +1,12 @@
-import requests
-from datetime import datetime as dt
-from datetime import datetime, timedelta
-import pandas as pd
-from google.cloud import storage
 import io
 import json
+from datetime import datetime
+from datetime import datetime as dt
+from datetime import timedelta
+
+import pandas as pd
+import requests
+from google.cloud import storage
 from user_definition import *
 
 
@@ -101,21 +103,83 @@ def update_last_fetch_date_map(
     )
 
 
-def flatten_json(json_data, lat, lon):
-    """Flatten the JSON API response."""
-    for k in ["preciptype", "stations"]:
-        if type(json_data[k]) is list:
-            json_data.update({k: ",".join(json_data[k])})
-    json_data.update({"lat": lat, "lon": lon})
-    return json_data
+def flatten_json(data):
+    """ Function to combine any list fields 
+        into a concat str"""
+    for key, value in data.items():
+        if isinstance(value, list):
+            data[key] = ','.join([str(v) for v in value])
+    return data
 
 
-def json_to_df(data, lat, lon):
+def extract_location_stats(data):
+    """ Function to extract location level 
+        fields from API response """
+    return flatten_json({
+        'lat': data['latitude'], 
+        'lon': data['longitude'],
+        'timezone': data['timezone'],
+        'tzoffset': data['tzoffset']
+    })
+
+
+def extract_day_stats(data):
+    """ Function to pull relevant day level 
+        fields from data """
+    # Remove unwanted fields
+    day = data.copy()
+    del day['sunriseEpoch']
+    del day['sunsetEpoch']
+    del day['icon']
+    del day['solarradiation']
+    del day['solarenergy']
+    del day['hours']
+    del day['stations']
+    del day['datetimeEpoch']
+    # Loop through remaining day fields
+    for key in list(day.keys()):
+        # Set None precipitation type to mean no rain
+        if "preciptype" in key and day[key] is None:
+            day[key] = 'No rain'
+        # Rename datetime field to date
+        if key == "datetime":
+            day['date'] = day.pop(key) 
+        # Add 'day_agg_' prefix to all otherkey names
+        else:
+            day[f'day_agg_{key}'] = day.pop(key)
+    return flatten_json(day)
+
+
+def extract_hour_stats(data):
+    """ Function to pull relevant hour level 
+        fields from data"""
+    # Loop through remaining day fields
+    for key in list(data.keys()):
+        # Set None precipitation type to mean no rain
+        if "preciptype" in key and data[key] is None:
+            data[key] = 'No rain'
+        # Rename datetime field to date
+        elif key == "datetime":
+            data['time'] = data.pop(key) 
+    return flatten_json(data)
+
+
+def json_to_df(json):
     """Convert JSON API response of a location to a dataframe."""
     result = []
-    for d in data["days"]:
-        for h in d["hours"]:
-            result.append(flatten_json(h, lat, lon))
+    # Extract high level location stats
+    location_stats = extract_location_stats(json)
+    # Loop through each day and extract day stats
+    for day_json in json["days"]:
+        day_stats = extract_day_stats(day_json)
+        # Loop through each day and extract day stats
+        for hour_json in day_json["hours"]:
+            hour_json = extract_hour_stats(hour_json)
+            # Combine day and location stats and append result
+            hour_json.update(location_stats)
+            hour_json.update(day_stats)
+            result.append(hour_json)
+    # Return formatted 
     return pd.DataFrame(result)
 
 
