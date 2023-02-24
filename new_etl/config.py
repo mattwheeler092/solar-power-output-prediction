@@ -33,7 +33,7 @@ COLLECTION_CACHE_FILE_NAME = "collection_cache.json"
 SPARK_CACHE_FILE_NAME = "spark_cache.json"
 
 # Define weather data GCP folder name
-GCP_DATA_FOLDER = "data"
+GCP_DATA_FOLDER = "test_data"
 
 # Define how many months of weather data to collect per airflow job
-NUM_MONTHS_TO_PROCESS_PER_JOB = 200
+NUM_MONTHS_TO_PROCESS_PER_JOB = 20

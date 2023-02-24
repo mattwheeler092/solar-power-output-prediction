@@ -1,14 +1,19 @@
 import pandas as pd
 import requests
+import logging
 
-from utils import flatten_json, generate_api_query
+from utils import (
+    RetryOnApiTimeoutError,
+    flatten_json, 
+    generate_api_query, 
+    ApiRequestTimeoutError,
+    FailedApiRequest
+)
+
+logging.basicConfig(level=logging.ERROR)
 
 
-class FailedApiRequest(Exception):
-    """ Class to capture cases when API requests to 
-    the Visual Crossing weather service fail """
-
-
+@RetryOnApiTimeoutError(retries=20, wait=0.2)
 def collect_api_data(lat, lon, start, end):
     """ Function to make API requestion for specific 
     lat /lon location and specific date range. Also 
@@ -16,12 +21,19 @@ def collect_api_data(lat, lon, start, end):
     # Generate API query and make request
     api_query = generate_api_query(lat, lon, start, end)
     response = requests.get(api_query)
-    # Raise error if API request fails
-    if response.status_code != 200:
-        raise FailedApiRequest
-    # Else extract, process, and return API data
-    data = response.json()
-    return process_response_json(data)
+    # If request successful, process / return api data
+    if response.status_code == 200:
+        data = response.json()
+        return process_response_json(data)
+    # Elif too many request raise appropriate error
+    elif response.status_code == 429:
+        msg = ""
+        raise ApiRequestTimeoutError(msg)
+    # Else raise error / log that api request failed
+    else:
+        msg = "Following "
+        logging.error(msg)
+        raise FailedApiRequest(msg)
 
 
 def process_response_json(json):
@@ -53,6 +65,7 @@ def extract_location_stats(data):
         'timezone': data['timezone'],
         'tzoffset': data['tzoffset']
     })
+
 
 def extract_day_stats(data):
     """ Function to pull relevant day level 

@@ -1,7 +1,9 @@
 import os
 import calendar
 import pandas as pd
+import time
 
+from google.api_core.exceptions import TooManyRequests
 from datetime import datetime, timedelta
 from config import (
     DATE_FORMAT, 
@@ -10,10 +12,17 @@ from config import (
     GCP_DATA_FOLDER
 )
 
+
+def load_csv_from_string(csv_str):
+    """ """
+    csv_str = csv_str.decode
+
+
 def load_location_data():
     """ Function to lat / lon values from locations csv """
     locations_df = pd.read_csv(LOCATION_DATA_FILE_NAME)
     return locations_df[['lat', 'lon']].values
+
 
 def generate_gcp_filename(lat, lon, start):
     """ Function to construct the GCP file name 
@@ -27,8 +36,8 @@ def generate_gcp_filename(lat, lon, start):
 
 def increment_date(date, num_days):
     """ Function to increment the provided str date 
-        by a specified number of days. Returns date 
-        in str format """
+    by a specified number of days. Returns date 
+    in str format """
     date = datetime.strptime(date, DATE_FORMAT)
     incremented_date = date + timedelta(days=num_days)
     return incremented_date.strftime(DATE_FORMAT)
@@ -36,7 +45,7 @@ def increment_date(date, num_days):
 
 def month_end_date(date):
     """ Function to find the end of month date where the 
-        month in question is the month of the input date """
+    month in question is the month of the input date """
     date = datetime.strptime(date, DATE_FORMAT)
     # Define year / month / day for month end 
     year = date.year
@@ -48,7 +57,7 @@ def month_end_date(date):
 
 def min_date(date1, date2):
     """ Function to determine which str date 
-        is the earlier date """
+    is the earlier date """
     datetime1 = datetime.strptime(date1, DATE_FORMAT)
     datetime2 = datetime.strptime(date2, DATE_FORMAT)
     if datetime1 <= datetime2:
@@ -58,20 +67,67 @@ def min_date(date1, date2):
     
 
 def flatten_json(data):
-    """ Function to combine any list fields 
-        within the data dict into a concat str"""
+    """ Function to combine any list fields within the data 
+    dict into a concat str with '|' seperator """
     for key, value in data.items():
         if isinstance(value, list):
-            data[key] = ','.join([str(v) for v in value])
+            data[key] = '|'.join([str(v) for v in value])
     return data
 
 
 def generate_api_query(lat, lon, start, end):
     """ Function to generate the api query for a specific 
-        lat / lon position and a specific start / end 
-        date period. """
+    lat / lon position and a specific start / end 
+    date period. """
     return f"""https://weather.visualcrossing.com/VisualCrossingWebServices
 /rest/services/timeline/{lat}%2C%20{lon}/{start}/{end}?unitGroup=metric&
 key={WEATHER_API_KEY}&contentType=json""".replace("\n", "")
 
+
+class FailedApiRequest(Exception):
+    """ Class to capture cases when API requests to 
+    the Visual Crossing weather service fail """
+
+
+class ApiRequestTimeoutError(Exception):
+    """ Class to capture cases when API requests to 
+    the Visual Crossing weather service fail """
+
+
+class FileTypeError(Exception):
+    """ """
+
+
+class BaseTimeoutDecoratorClass:
+    """ """
+    def __init__(self, retries, wait, error):
+        """ """
+        self.retries = retries
+        self.wait = wait
+        self.error = error
+
+    def __call__(self, func):
+        """ """
+        def wrapped(*args, **kwargs):
+            for i in range(self.retries + 1):
+                try:
+                    result = func(*args, **kwargs)
+                    return result
+                except self.error as err:
+                    time.sleep(self.wait)
+                    if i == self.retries:
+                        raise err
+        return wrapped
+
+
+class RetryOnGcpTimeoutError(BaseTimeoutDecoratorClass):
+    """ """
+    def __init__(self, retries, wait):
+        super().__init__(retries, wait, TooManyRequests)
+
+
+class RetryOnApiTimeoutError(BaseTimeoutDecoratorClass):
+    """ """
+    def __init__(self, retries, wait):
+        super().__init__(retries, wait, ApiRequestTimeoutError)
 

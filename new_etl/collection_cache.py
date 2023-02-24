@@ -21,7 +21,10 @@ class CollectionCache:
         self.bucket = GCP_Bucket()
         # If cache file exists load from GCP
         if self.bucket.check_file_exists(COLLECTION_CACHE_FILE_NAME):
-            self.cache = self.bucket.load_file(COLLECTION_CACHE_FILE_NAME)
+            self.cache = self.bucket.load_file(
+                COLLECTION_CACHE_FILE_NAME, 
+                file_type='json'
+            )
         # If cache doesn't exist upload empty json to GCP
         else:  
             self.cache = {}
@@ -106,7 +109,5 @@ class CollectionCache:
         cache to GCP """
         self.bucket.upload_file(
             self.cache, 
-            COLLECTION_CACHE_FILE_NAME, 
-            file_type='json',
-            overwrite=True
+            COLLECTION_CACHE_FILE_NAME
         )

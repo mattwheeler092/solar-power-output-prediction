@@ -16,7 +16,10 @@ class SparkCache:
         self.bucket = GCP_Bucket()
         # If cache file exists load from GCP
         if self.bucket.check_file_exists(SPARK_CACHE_FILE_NAME):
-            self.cache = self.bucket.load_file(SPARK_CACHE_FILE_NAME)
+            self.cache = self.bucket.load_file(
+                SPARK_CACHE_FILE_NAME,
+                file_type='json'
+            )
         # If cache doesn't exist upload empty json to GCP
         else:
             self.cache = {"files": []}
@@ -59,7 +62,5 @@ class SparkCache:
         cache to GCP """
         self.bucket.upload_file(
             self.cache, 
-            SPARK_CACHE_FILE_NAME, 
-            file_type='json',
-            overwrite=True
+            SPARK_CACHE_FILE_NAME
         )

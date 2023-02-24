@@ -4,10 +4,7 @@ import pandas as pd
 
 from google.cloud import storage
 from config import GS_BUCKET, GS_SERVICE_KEY
-
-
-class FileTypeError(Exception):
-    pass
+from utils import RetryOnGcpTimeoutError, FileTypeError
 
 
 class GCP_Bucket:
@@ -21,6 +18,7 @@ class GCP_Bucket:
         self.bucket = self.client.get_bucket(GS_BUCKET)
 
 
+    @RetryOnGcpTimeoutError(retries=20, wait=0.2)
     def check_file_exists(self, file_name):
         """Function to check if a file exists
         within the GCP bucket"""
@@ -28,6 +26,7 @@ class GCP_Bucket:
         return blob.exists()
 
 
+    @RetryOnGcpTimeoutError(retries=20, wait=0.2)
     def load_file(self, file_name, file_type):
         """Function to load either a JSON or CSV file to 
         GCP. Returns dict for JSON files and pd.DataFrame 
@@ -39,22 +38,20 @@ class GCP_Bucket:
         if file_type == 'json':
             return json.loads(file_str)
         elif file_type == 'csv':
-            return pd.read_csv(io.StringIO(file_str))
+            return io.StringIO(file_str)
         else:
             msg = "'file_type' != 'csv' or 'json"
             raise FileTypeError(msg)
 
 
-    def upload_file(self, data, file_name, file_type, overwrite=False):
+    @RetryOnGcpTimeoutError(retries=20, wait=0.2)
+    def upload_file(self, data, file_name):
         """Function to upload either a JSON or CSV file to 
         GCP. The 'overwrite' flag specifies if the upload
         is able to overwrite existing GCP files with the 
         same file_name """
-        # Set the upload params to either enable or diable overwiting
-        if overwrite:
-            params = {"if_generation_match": None}
-        else:
-            params = {"if_generation_not_match": None}
+        # Extract the filename from file_name
+        file_type = file_name.split('.')[-1]
         # Convert the input data to string format
         if file_type == 'json':
             data = json.dumps(data)
@@ -68,5 +65,5 @@ class GCP_Bucket:
         # Initialise blob obj and upload the data to GCP
         blob = self.bucket.blob(file_name)
         blob.upload_from_string(
-            data, content_type=content_type, **params
+            data, content_type=content_type
         )
