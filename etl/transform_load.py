@@ -72,12 +72,7 @@ def transform_load_to_mongo(folder=""):
     weather_df = drop_columns(weather_df, columns=["weather_id", "weather_icon"])
     weather_df = rename_columns(
         weather_df,
-        {
-            "feelslike": "feels_like",
-            "precip": "precipitation",
-            "severerisk": "severe_risk",
-            "uvindex": "uv_index",
-        },
+        COLUMN_RENAME_DICT,
     )
     location_df = read_location_data(spark)
 

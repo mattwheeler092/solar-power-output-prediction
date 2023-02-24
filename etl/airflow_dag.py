@@ -28,8 +28,8 @@ last_fetch_date_map = read_last_fetch_date_map(
 def get_visualcrossing_history(execution_date, **context):
     """Fetch data from Visual Crossing API and save as a CSV to GCS"""
     timestamp = str(int(execution_date.timestamp()))
-    df_list, errors, last_fetch_date_map = fetch_visualcrossing_history(
-        last_fetch_date_map, VC_API_KEY
+    df_list, errors, new_last_fetch_date_map = fetch_visualcrossing_history(
+        last_fetch_date_map, VC_API_KEY, test=True
     )
     for coordinate, last_date, df in df_list:
         # file name format: VC_lat_lon_lastFetchDate.csv
@@ -37,7 +37,7 @@ def get_visualcrossing_history(execution_date, **context):
         blob_name = os.path.join(timestamp, file_name)
         write_csv_to_gcs(GS_BUCKET_NAME, blob_name, GS_SERVICE_ACCOUNT_KEY_FILE, df)
     update_last_fetch_date_map(
-        last_fetch_date_map, GS_BUCKET_NAME, GS_SERVICE_ACCOUNT_KEY_FILE
+        new_last_fetch_date_map, GS_BUCKET_NAME, GS_SERVICE_ACCOUNT_KEY_FILE
     )
 
 
