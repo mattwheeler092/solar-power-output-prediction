@@ -39,17 +39,22 @@ def collect_weather_api_data_store_in_gcp():
             data=api_data, 
             file_name=gcp_filename
         )
-        # Add GCP filename to spark cache
+        # Add GCP filename to spark cache for future processing
         spark_cache.add_file(gcp_filename)
 
 
 
 def process_data_with_spark_store_in_mongo():
-    """ DAG function to """
+    """ DAG function to raw load weather api from GCP / process 
+    data with spark / store resulting documents in mongodb """
 
     # Initialise gcp bucket and spark cache classes
     gcp_bucket = GCP_Bucket()
     spark_cache = SparkCache()
 
+    # Loop through / process each spark cache file
     for gcp_file in spark_cache.list_cached_files():
+
+        # TODO: Add functions to process file data with spark and 
+        # then upload resulting document to MongoDB server. 
         pass
