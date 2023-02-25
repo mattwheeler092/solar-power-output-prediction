@@ -15,9 +15,8 @@ from pyspark.sql.types import (
     DoubleType
 )
 
-def create_spark_df_from_gcp_file(gcp_filename):
+def create_spark_df_from_gcp_file(gcp_filename, spark_session):
     """ Function to load csv file from GCP into spark """
-    spark_session = create_spark_session()
     df = (spark_session.read.format("csv")
           .option("header", "true")
           .schema(WEATHER_DATA_SCHEMA)
@@ -29,7 +28,17 @@ def insert_spark_data_to_mongo(spark_df):
     """ Function to insert each spark 
     dataframe rows into mongo database """
     mongo = MongoDB()
-    mongo.insert([row.asDict() for row in spark_df.collect()])
+    records = []
+    for row in spark_df.collect():
+        row = row.asDict()
+        date = row['date']
+        time = row['time']
+        lat = row['lat']
+        lon = row['lon']
+        id_str = f'{lat}_{lon}_{date}_{time}'
+        row['_id'] = id_str
+        records.append(row)
+    mongo.insert(records)
 
 
 def process_spark_df(spark_df):

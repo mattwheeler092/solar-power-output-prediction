@@ -25,6 +25,7 @@ from utils import (
 from spark_processing import (
     create_spark_df_from_gcp_file,
     insert_spark_data_to_mongo,
+    create_spark_session,
     process_spark_df
 )
 
@@ -49,7 +50,7 @@ def collect_weather_api_data_store_in_gcp():
     for lat, lon, start, end in collection_cache.generator(locations):
 
         # Add logging info of location / date range being processed
-        logging.info(f"Processing:\t{lat = }\t{lon = }\t{start = }\t{end = }")
+        logging.info(f"Processing: {lat = } {lon = } {start = } {end = }")
         
         # Collect / process visual crossing API data
         api_data = collect_api_data(lat, lon, start, end)
@@ -76,6 +77,9 @@ def process_data_with_spark_store_in_mongo():
     # Load lat / lon location coordinates
     locations = load_location_data()
 
+    # Initialise a spark session
+    spark_session = create_spark_session()
+
     # Kill airflow job if all data is collected / processed
     if (collection_cache.collection_complete(locations) and 
             spark_cache.cache_empty()):
@@ -85,12 +89,13 @@ def process_data_with_spark_store_in_mongo():
     # Loop through / process each spark cache file
     for gcp_filename in spark_cache.list_cached_files():
 
-        # Add logging info of location / date range being processed
-        logging.info(f"Processing:\t{gcp_filename = }")
+        # Add logging info of location / date being processed
+        logging.info(f"Processing: {gcp_filename = }")
 
         # Load the weather data from GCP
-        spark_df = create_spark_df_from_gcp_file(gcp_filename)
-
+        spark_df = create_spark_df_from_gcp_file(
+            gcp_filename, spark_session
+        )
         # Process the weather data using spark
         spark_df = process_spark_df(spark_df)
 
@@ -102,7 +107,7 @@ def process_data_with_spark_store_in_mongo():
 with DAG(dag_id=AIRFLOW_DAG_ID,
          description="ETL pipeline for historical weather collection",
          start_date=datetime.strptime(AIRFLOW_START_DATE, DATE_FORMAT),
-         schedule_interval=AIRFLOW_SCHEDULE) as dag:
+         schedule=AIRFLOW_SCHEDULE) as dag:
     
     task1 = PythonOperator(
         python_callable=collect_weather_api_data_store_in_gcp,
