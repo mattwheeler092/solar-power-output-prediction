@@ -1,0 +1,196 @@
+import io
+import json
+from datetime import datetime
+from datetime import datetime as dt
+from datetime import timedelta
+
+import pandas as pd
+import requests
+from google.cloud import storage
+from user_definition import *
+
+
+def fetch_visualcrossing_history(last_fetch_date_map, api_key, test=True): # test mode so we don't over-fetch during testing
+    """Fetch historical weather data by month for each (lat, lon) pair.
+    Return:
+    1. a list of tuples, each containing the (lat, lon) pair, the last fetch date, and the corresponding dataFrame.
+    2. a list of (lat, lon) pairs for which an error occurred during fetching.
+    3. a mapping of (lat, lon) pair to the last fetch date"""
+    out_df = []  # tuple of ((lat,lon), df)
+    errors = []
+    for (lat, lon), last_date in last_fetch_date_map.items():
+        try:
+            last_date = datetime.strptime(
+                last_date, "%Y-%m-%d") + timedelta(days=1)
+            end_date = (
+                _last_day_of_month(last_date)
+                if not test
+                else last_date + timedelta(days=1)
+            )
+            endpoint = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{lat}%2C{lon}/{str(last_date.date())}/{str(end_date.date())}?unitGroup=us&key={api_key}&contentType=json"
+            response = requests.get(endpoint)
+            data = response.json()
+
+            # convert json to dataframe
+            df = json_to_df(data, lat, lon)
+
+            # update last fetch date for the location
+            last_fetch_date_dict = _get_last_fetch_date(df, lat, lon)
+            last_fetch_date_map.update(last_fetch_date_dict)
+
+            # save dataframe
+            out_df.append(((lat, lon), str(last_date.date()), df))
+        except:
+            errors.append((lat, lon))
+    return out_df, errors, last_fetch_date_map
+
+
+def _last_day_of_month(date):
+    """Given a date, return the last day of the month."""
+    next_month = date.replace(day=28) + timedelta(days=4)
+    return next_month - timedelta(days=next_month.day)
+
+
+def _get_last_fetch_date(df, lat, lon):
+    """Given a DataFrame of weather data, return a dictionary mapping the (lat, lon) pair to the maximum date in the dataFrame."""
+    try:
+        timestamp = df["datetimeEpoch"].max()
+        date = str(dt.fromtimestamp(timestamp).date())
+        return {(lat, lon): date}
+    except:
+        return {}
+
+
+def read_last_fetch_date_map(
+    bucket_name, service_account_key_file, file_name="VC_last_fetch.json"
+):
+    """Read a mapping of (lat, lon) pair to last fetch date from GCS.
+    If such file doesn't already exist, create one where the last fetch dates are initialized as 2022-01-01"""
+    client = storage.Client.from_service_account_json(service_account_key_file)
+    bucket = client.get_bucket(bucket_name)
+    print("reading last fetch mpa")
+    blob = bucket.blob(file_name)
+    if blob.exists():
+        json_str = blob.download_as_string()
+        last_fetch_date_map = json.loads(json_str)
+        new_last_fetch_date_map = {
+            eval(k): v for k, v in last_fetch_date_map.items()}
+        return new_last_fetch_date_map
+    else:
+        # if the file does not exist, create one
+        locations = LAT_LON_TUPLE
+        last_fetch_date = {l: "2022-01-01" for l in locations}
+        update_last_fetch_date_map(
+            last_fetch_date, bucket_name, service_account_key_file, file_name
+        )
+        return last_fetch_date
+
+
+def update_last_fetch_date_map(
+    last_fetch_date_map,
+    bucket_name,
+    service_account_key_file,
+    file_name="VC_last_fetch.json",
+):
+    """Write a mapping of (lat, lon) pairs to last fetch dates to a JSON file to GCS."""
+    client = storage.Client.from_service_account_json(service_account_key_file)
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(file_name)
+    new_last_fetch_date_map = {
+        str(k): v for k, v in last_fetch_date_map.items()}
+    blob.upload_from_string(
+        data=json.dumps(new_last_fetch_date_map), content_type="application/json"
+    )
+
+
+def flatten_json(data):
+    """ Function to combine any list fields 
+        into a concat str"""
+    for key, value in data.items():
+        if isinstance(value, list):
+            data[key] = ','.join([str(v) for v in value])
+    return data
+
+
+def extract_location_stats(data):
+    """ Function to extract location level 
+        fields from API response """
+    return flatten_json({
+        'lat': data['latitude'], 
+        'lon': data['longitude'],
+        'timezone': data['timezone'],
+        'tzoffset': data['tzoffset']
+    })
+
+
+def extract_day_stats(data):
+    """ Function to pull relevant day level 
+        fields from data """
+    # Remove unwanted fields
+    day = data.copy()
+    del day['sunriseEpoch']
+    del day['sunsetEpoch']
+    del day['icon']
+    del day['solarradiation']
+    del day['solarenergy']
+    del day['hours']
+    del day['stations']
+    del day['datetimeEpoch']
+    # Loop through remaining day fields
+    for key in list(day.keys()):
+        # Set None precipitation type to mean no rain
+        if "preciptype" in key and day[key] is None:
+            day[key] = 'No rain'
+        # Rename datetime field to date
+        if key == "datetime":
+            day['date'] = day.pop(key) 
+        # Add 'day_agg_' prefix to all otherkey names
+        else:
+            day[f'day_agg_{key}'] = day.pop(key)
+    return flatten_json(day)
+
+
+def extract_hour_stats(data):
+    """ Function to pull relevant hour level 
+        fields from data"""
+    # Loop through remaining day fields
+    for key in list(data.keys()):
+        # Set None precipitation type to mean no rain
+        if "preciptype" in key and data[key] is None:
+            data[key] = 'No rain'
+        # Rename datetime field to date
+        elif key == "datetime":
+            data['time'] = data.pop(key) 
+    return flatten_json(data)
+
+
+def json_to_df(json):
+    """Convert JSON API response of a location to a dataframe."""
+    result = []
+    # Extract high level location stats
+    location_stats = extract_location_stats(json)
+    # Loop through each day and extract day stats
+    for day_json in json["days"]:
+        day_stats = extract_day_stats(day_json)
+        # Loop through each day and extract day stats
+        for hour_json in day_json["hours"]:
+            hour_json = extract_hour_stats(hour_json)
+            # Combine day and location stats and append result
+            hour_json.update(location_stats)
+            hour_json.update(day_stats)
+            result.append(hour_json)
+    # Return formatted 
+    return pd.DataFrame(result)
+
+
+def write_csv_to_gcs(bucket_name, blob_name, service_account_key_file, df):
+    """Write and read a blob from GCS using file-like IO"""
+    client = storage.Client.from_service_account_json(service_account_key_file)
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    # write df to a temporary file object
+    temp_buffer = io.StringIO()
+    df.to_csv(temp_buffer, index=False)
+    # upload temporary file object
+    temp_buffer.seek(0)
+    blob.upload_from_file(temp_buffer, content_type="text/csv")
