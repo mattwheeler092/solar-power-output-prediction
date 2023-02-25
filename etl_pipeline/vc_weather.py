@@ -2,6 +2,8 @@ import pandas as pd
 import requests
 import logging
 
+from config import WEATHER_DATA_SCHEMA
+
 from utils import (
     RetryOnApiTimeoutError,
     flatten_json, 
@@ -52,8 +54,32 @@ def process_response_json(json):
             hour_json.update(location_stats)
             hour_json.update(day_stats)
             result.append(hour_json)
-    # Return formatted 
-    return pd.DataFrame(result).fillna(0)
+    # Convert results list to dataframe
+    df = pd.DataFrame(result)
+    # Return df that adheres to spark schema
+    return enforce_spark_schema(df)
+
+
+def enforce_spark_schema(api_data):
+    """ Function to ensure the api dataframe adheres to the expect 
+    spark sql schema. Adds missing columns and fills nan values 
+    with appriate value for the column dtype """
+    # Load spark df schema and extract field names / types
+    schema_json = WEATHER_DATA_SCHEMA.jsonValue()['fields']
+    field_types = {row['name']: row['type'] for row in schema_json}
+    # Func to provide missing value for different dtypes
+    nan_type = lambda dtype: 'MISSING' if dtype == 'string' else 0
+    # Loop through each field and determine the nan value
+    for field, datatype in field_types.items():
+        nan_val = nan_type(datatype)
+        # If field missing from df add column of nan values
+        if field in api_data.columns:
+            api_data[field] = api_data[field].fillna(nan_val)
+        # Else fill all NaN with nan values
+        else:
+            api_data[field] = nan_val
+    # Return dataframe with correct column ordering
+    return api_data[field_types.keys()]
 
 
 def extract_location_stats(data):
