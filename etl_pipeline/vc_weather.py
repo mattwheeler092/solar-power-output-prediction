@@ -29,11 +29,11 @@ def collect_api_data(lat, lon, start, end):
         return process_response_json(data)
     # Elif too many request raise appropriate error
     elif response.status_code == 429:
-        msg = ""
+        msg = "API Status 429: Too many API Requests"
         raise ApiRequestTimeoutError(msg)
     # Else raise error / log that api request failed
     else:
-        msg = "Following "
+        msg = "API Status 400: Request failed"
         logging.error(msg)
         raise FailedApiRequest(msg)
 
