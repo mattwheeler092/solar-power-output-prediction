@@ -24,7 +24,7 @@ MONGO_COLLECTION = os.environ["MONGO_COLLECTION_NAME"]
 WEATHER_API_KEY = os.environ['WEATHER_API_KEY']
 
 # Define how many months of weather data to collect per airflow job
-NUM_MONTHS_TO_PROCESS_PER_JOB = 2
+NUM_MONTHS_TO_PROCESS_PER_JOB = 1
 
 # Define the time period to collect weather data for each location
 START_DATE = "2022-01-01"

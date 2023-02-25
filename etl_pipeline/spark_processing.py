@@ -43,9 +43,9 @@ def insert_spark_data_to_mongo(spark_df):
 def process_spark_df(spark_df):
     """ Function to drop / rename specified 
     column within provided spark dataframe """
-    df = drop_columns(spark_df)
-    df = rename_columns(spark_df)
-    return df
+    spark_dfdf = drop_columns(spark_df)
+    spark_dfdf = rename_columns(spark_df)
+    return spark_dfdf
 
 
 def create_spark_session():
