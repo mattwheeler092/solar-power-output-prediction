@@ -3,19 +3,48 @@ import calendar
 import pandas as pd
 import time
 
+# from airflow.models import DagRun, DagModel
+# from airflow import settings
+from airflow.api.client.local_client import Client
 from google.api_core.exceptions import TooManyRequests
 from datetime import datetime, timedelta
 from config import (
     DATE_FORMAT, 
     WEATHER_API_KEY, 
     LOCATION_DATA_FILE_NAME,
-    GCP_DATA_FOLDER
+    GCP_DATA_FOLDER,
+    AIRFLOW_DAG_ID
 )
 
 
-def load_csv_from_string(csv_str):
-    """ """
-    csv_str = csv_str.decode
+def kill_airflow_job():
+    """ Function to perminently kill the pipelines airflow 
+    job. To be used once all data has been collected """
+    # Define client and loop through each dag run
+    client = Client(None, None)
+    for dag_run in client.get_dag_runs(AIRFLOW_DAG_ID):
+        # kill all running dags with project dag id
+        if dag_run.state == 'running':
+            client.trigger_dag(
+                dag_id=AIRFLOW_DAG_ID, 
+                run_id=dag_run.run_id, 
+                conf={'kill_signal': 'SIGINT'}
+            )
+
+
+# def kill_airflow_job():
+#     """ Function to perminently kill the pipelines airflow 
+#     job. To be used once all data has been collected """
+#     # Get the DAG object by its dag_id
+#     dag = DagModel.get_dagmodel(AIRFLOW_DAG_ID)
+#     # Set the end_date of the DagRun to stop the DAG
+#     for dag_run in DagRun.find(dag_id=AIRFLOW_DAG_ID):
+#         dag_run.end_date = datetime.now()
+#         dag_run.state = "failed"
+#         dag_run.external_trigger = False
+#         session = settings.Session()
+#         session.merge(dag_run)
+#         session.commit()
 
 
 def load_location_data():

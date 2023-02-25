@@ -16,12 +16,12 @@ MONGO_COLLECTION = os.environ["MONGO_COLLECTION"]
 # Load Visual crossing weather API key
 WEATHER_API_KEY = os.environ['WEATHER_API_KEY']
 
-# Define the time period to collect weather data
+# Define how many months of weather data to collect per airflow job
+NUM_MONTHS_TO_PROCESS_PER_JOB = 20
+
+# Define the time period to collect weather data for each location
 START_DATE = "2022-01-01"
 END_DATE = "2022-12-31"
-
-# Define the project date format
-DATE_FORMAT = "%Y-%m-%d"
 
 # Define the location of the csv containing the lat / lon coordinates
 LOCATION_DATA_FILE_NAME = "locations.csv"
@@ -35,5 +35,10 @@ SPARK_CACHE_FILE_NAME = "spark_cache.json"
 # Define weather data GCP folder name
 GCP_DATA_FOLDER = "test_data"
 
-# Define how many months of weather data to collect per airflow job
-NUM_MONTHS_TO_PROCESS_PER_JOB = 20
+# Define airflow job id / start date / schedule (every 3 hours)
+AIRFLOW_DAG_ID = "weather_collection_pipeline"
+AIRFLOW_START_DATE = "2023-02-26"
+AIRFLOW_SCHEDULE = "0 */3 * * *"
+
+# Define the project date format
+DATE_FORMAT = "%Y-%m-%d"

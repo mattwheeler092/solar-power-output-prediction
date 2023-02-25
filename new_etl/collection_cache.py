@@ -41,7 +41,7 @@ class CollectionCache:
         # Loop through each of the provided locations
         for lat, lon in locations:
             # Yield start / end dates until collection is complete
-            while not self.collection_complete(lat, lon):
+            while not self.location_processed(lat, lon):
                 start, end = self.next_collection_dates(lat, lon)
                 yield lat, lon, start, end
                 # Update cache with newest collection date
@@ -57,7 +57,7 @@ class CollectionCache:
         return f"({lat}:{lon})"
 
 
-    def collection_complete(self, lat, lon):
+    def location_processed(self, lat, lon):
         """ Function to check if all data has been collected
         for a specific lat / lon location. Checks if the most 
         recent collection date is equal to the end date """
@@ -65,7 +65,7 @@ class CollectionCache:
         return self.cache.get(key, START_DATE) == END_DATE
     
 
-    def full_collection_complete(self, locations):
+    def collection_complete(self, locations):
         """ Function to check if full collection process is 
         complete. Loops through each location and see's if 
         the cached collection date is equal to the end date """

@@ -39,6 +39,11 @@ class SparkCache:
             self.remove_file(file_name)
 
 
+    def cache_empty(self):
+        """ Function to check if the cache is empty """
+        return len(self.cache['files']) == 0
+
+
     def add_file(self, file_name):
         """ Function to add a new file to the cached 
         file list. Once added, the updated cache is 
