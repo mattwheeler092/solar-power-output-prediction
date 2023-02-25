@@ -51,7 +51,7 @@ AIRFLOW_SCHEDULE = "0 */3 * * *"
 DATE_FORMAT = "%Y-%m-%d"
 
 # Define columns to be dropped in spark processing
-DROP_COLUMNS = ["timezone", "tzoffset", "icon", "stations"]
+DROP_COLUMNS = ["tzoffset", "icon", "stations"]
 
 # Define columns to be rename in spark processing
 COLUMN_RENAME_DICT = {
