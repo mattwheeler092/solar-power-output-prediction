@@ -24,7 +24,7 @@ START_DATE = "2022-01-01"
 END_DATE = "2022-12-31"
 
 # Define the location of the csv containing the lat / lon coordinates
-LOCATION_DATA_FILE_NAME = "locations.csv"
+LOCATION_DATA_FILE_NAME = "locations_test.csv"
 
 # Define the collection cache GCP filename
 COLLECTION_CACHE_FILE_NAME = "collection_cache.json"

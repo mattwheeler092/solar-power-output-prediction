@@ -9,6 +9,7 @@ from vc_weather import collect_api_data
 from collection_cache import CollectionCache
 from spark_cache import SparkCache
 from gcp_bucket import GCP_Bucket
+from mongo_db import MongoDB
 
 from config import (
     AIRFLOW_DAG_ID, 
@@ -20,6 +21,11 @@ from utils import (
     load_location_data, 
     generate_gcp_filename,
     kill_airflow_job
+)
+from spark_processing import (
+    create_spark_df_from_gcp_file,
+    insert_spark_data_to_mongo,
+    process_spark_df
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -58,33 +64,38 @@ def collect_weather_api_data_store_in_gcp():
         spark_cache.add_file(gcp_filename)
 
 
+
 def process_data_with_spark_store_in_mongo():
     """ DAG function to raw load weather api from GCP / process 
     data with spark / store resulting documents in mongodb """
 
-    # Initialise gcp bucket and spark cache classes
-    gcp_bucket = GCP_Bucket()
+    # Initialise two cache classes
     collection_cache = CollectionCache()
     spark_cache = SparkCache()
 
     # Load lat / lon location coordinates
     locations = load_location_data()
 
-    # Kill airflow job if all data collected / processed
+    # Kill airflow job if all data is collected / processed
     if (collection_cache.collection_complete(locations) and 
             spark_cache.cache_empty()):
         kill_airflow_job()
         return
 
     # Loop through / process each spark cache file
-    for gcp_file in spark_cache.list_cached_files():
+    for gcp_filename in spark_cache.list_cached_files():
 
         # Add logging info of location / date range being processed
-        logging.info(f"Processing:\t{gcp_file = }")
+        logging.info(f"Processing:\t{gcp_filename = }")
 
-        # TODO: Add functions to process file data with spark and 
-        # then upload resulting document to MongoDB server. 
-        pass
+        # Load the weather data from GCP
+        spark_df = create_spark_df_from_gcp_file(gcp_filename)
+
+        # Process the weather data using spark
+        spark_df = process_spark_df(spark_df)
+
+        # Insert the processed data in MongoDB
+        insert_spark_data_to_mongo(spark_df)
 
 
 
