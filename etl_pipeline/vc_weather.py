@@ -53,7 +53,7 @@ def process_response_json(json):
             hour_json.update(day_stats)
             result.append(hour_json)
     # Return formatted 
-    return pd.DataFrame(result)
+    return pd.DataFrame(result).fillna(0)
 
 
 def extract_location_stats(data):
