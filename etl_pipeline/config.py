@@ -24,7 +24,7 @@ MONGO_COLLECTION = os.environ["MONGO_COLLECTION_NAME"]
 WEATHER_API_KEY = os.environ['WEATHER_API_KEY']
 
 # Define how many months of weather data to collect per airflow job
-NUM_MONTHS_TO_PROCESS_PER_JOB = 400
+NUM_MONTHS_TO_PROCESS_PER_JOB = 100
 
 # Define the time period to collect weather data for each location
 START_DATE = "2022-01-01"
@@ -42,10 +42,10 @@ SPARK_CACHE_FILE_NAME = "spark_cache.json"
 # Define weather data GCP folder name
 GCP_DATA_FOLDER = "data"
 
-# Define airflow job id / start date / schedule (every 3 hours)
+# Define airflow job id / start date / schedule (every 30 minutes)
 AIRFLOW_DAG_ID = "weather_collection_pipeline"
-AIRFLOW_START_DATE = "2023-02-26"
-AIRFLOW_SCHEDULE = "0 */2 * * *"
+AIRFLOW_START_DATE = "2023-02-27"
+AIRFLOW_SCHEDULE = "*/30 * * * *"
 
 # Define the project date format
 DATE_FORMAT = "%Y-%m-%d"

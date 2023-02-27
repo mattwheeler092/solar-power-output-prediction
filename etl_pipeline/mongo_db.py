@@ -1,4 +1,8 @@
 import os
+import logging
+
+from pymongo.errors import BulkWriteError
+from pprint import pprint
 
 import pymongo
 from config import (
@@ -8,6 +12,8 @@ from config import (
     MONGO_PASSWORD,
     MONGO_USERNAME,
 )
+
+logging.basicConfig(level=logging.WARN)
 
 class MongoDB:
     """ Class to handle all connections and operations 
@@ -31,7 +37,11 @@ class MongoDB:
 
     def insert(self, docs):
         """Inserts many documents into db"""
-        self.collection.insert_many(docs)
+        try:
+            self.collection.insert_many(docs)
+        except BulkWriteError as bwe:
+            key = bwe.details['writeErrors'][0]['keyValue']['_id']
+            logging.warn(f"INSERT KEY ERROR: {key}")
 
     def update(self, filter, update):
         """Updates documents that match filter query"""
