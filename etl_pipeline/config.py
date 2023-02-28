@@ -44,8 +44,8 @@ GCP_DATA_FOLDER = "data"
 
 # Define airflow job id / start date / schedule (every 30 minutes)
 AIRFLOW_DAG_ID = "weather_collection_pipeline"
-AIRFLOW_START_DATE = "2023-02-27"
-AIRFLOW_SCHEDULE = "*/30 * * * *"
+AIRFLOW_START_DATE = "2023-02-28"
+AIRFLOW_SCHEDULE = "*/15 * * * *"
 
 # Define the project date format
 DATE_FORMAT = "%Y-%m-%d"

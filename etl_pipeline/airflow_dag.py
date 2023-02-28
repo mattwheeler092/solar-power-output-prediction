@@ -103,10 +103,10 @@ def process_data_with_spark_store_in_mongo():
         insert_spark_data_to_mongo(spark_df)
 
 
-
 with DAG(dag_id=AIRFLOW_DAG_ID,
          description="ETL pipeline for historical weather collection",
          start_date=datetime.strptime(AIRFLOW_START_DATE, DATE_FORMAT),
+         default_args={'depends_on_past': False},
          schedule=AIRFLOW_SCHEDULE) as dag:
     
     task1 = PythonOperator(
