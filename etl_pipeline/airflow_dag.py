@@ -46,11 +46,13 @@ def collect_weather_api_data_store_in_gcp():
     # Load lat / lon location coordinates
     locations = load_location_data()
 
+    counter = 0
     # Loop through location / date range collections assigned to airflow job
     for lat, lon, start, end in collection_cache.generator(locations):
 
         # Add logging info of location / date range being processed
-        logging.info(f"Processing: {lat = } {lon = } {start = } {end = }")
+        logging.info(f"({counter}) Processing: {lat = } {lon = } {start = } {end = }")
+        counter += 1
         
         # Collect / process visual crossing API data
         api_data = collect_api_data(lat, lon, start, end)
@@ -85,12 +87,13 @@ def process_data_with_spark_store_in_mongo():
             spark_cache.cache_empty()):
         kill_airflow_job()
         return
-
+    
+    counter = 0
     # Loop through / process each spark cache file
     for gcp_filename in spark_cache.list_cached_files():
 
         # Add logging info of location / date being processed
-        logging.info(f"Processing: {gcp_filename = }")
+        logging.info(f"({counter}) Processing: {gcp_filename = }")
 
         # Load the weather data from GCP
         spark_df = create_spark_df_from_gcp_file(
@@ -101,6 +104,7 @@ def process_data_with_spark_store_in_mongo():
 
         # Insert the processed data in MongoDB
         insert_spark_data_to_mongo(spark_df)
+        counter += 1
 
 
 with DAG(dag_id=AIRFLOW_DAG_ID,

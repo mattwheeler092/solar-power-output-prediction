@@ -44,7 +44,7 @@ class GCP_Bucket:
             raise FileTypeError(msg)
 
 
-    @RetryOnGcpTimeoutError(retries=20, wait=0.2)
+    @RetryOnGcpTimeoutError(retries=100, wait=0.2)
     def upload_file(self, data, file_name):
         """Function to upload either a JSON or CSV file to 
         GCP. The 'overwrite' flag specifies if the upload
@@ -67,3 +67,4 @@ class GCP_Bucket:
         blob.upload_from_string(
             data, content_type=content_type
         )
+        print('uploaded')

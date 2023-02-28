@@ -1,7 +1,7 @@
 import os
 import logging
 
-from pymongo.errors import BulkWriteError
+from pymongo.errors import BulkWriteError, DuplicateKeyError
 from pprint import pprint
 
 import pymongo

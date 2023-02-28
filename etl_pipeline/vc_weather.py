@@ -54,8 +54,9 @@ def process_response_json(json):
             hour_json.update(location_stats)
             hour_json.update(day_stats)
             result.append(hour_json)
-    # Convert results list to dataframe
+    # Convert results list to dataframe (ensure no duplicate rows)
     df = pd.DataFrame(result)
+    df = df.groupby(['lat','lon','date','time']).first().reset_index()
     # Return df that adheres to spark schema
     return enforce_spark_schema(df)
 
