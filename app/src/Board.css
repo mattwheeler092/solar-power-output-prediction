@@ -1,0 +1,248 @@
+.Board {
+    display: grid;
+    grid-template-columns: 5fr 4fr;
+    grid-template-rows: 1fr;
+    min-width: 600px;
+    min-height: 410px;
+    width: 60vw;
+    height: 60vh;
+    margin-top: 1rem;
+    background-color: #f2f2f2;
+    border-radius: 1rem;
+}
+
+.left {
+    width: 100%;
+    height: 60vh;
+    min-width: 200px;
+    background-color: black;
+    border-radius: 1rem 0rem 0rem 1rem;
+    position: relative;
+}
+
+.left img {
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    border-radius: inherit;
+    object-fit: cover;
+    object-position: center;
+    /* background-size: cover; */
+}
+
+.left #location {
+    text-align: right;
+    padding-right: 2vw;
+    font-size: 2em;
+    padding-top: 1rem;
+}
+
+.image-overlay {
+    position: absolute;
+    border-radius: inherit;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    color: #f1f1f1;
+    width: 100%;
+    height: 100%;
+    transition: .7s ease-in-out;
+    font-size: 20px;
+    text-align: center;
+}
+
+.left:hover .image-overlay {
+    background: rgba(255, 255, 255, 0);
+}
+
+.image-overlay-bottom {
+    display: flex;
+    position: absolute;
+    bottom: 3rem;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.left #temperature {
+    bottom: 2.5rem;
+    right: 2rem;
+    font-size: 1em;
+    padding-right: 2vw;
+}
+
+.datetime {
+    bottom: 2.5rem;
+    left: 2rem;
+    text-align: left;
+    font-size: 1rem;
+    padding-left: 2rem;
+}
+
+.datetime #time {
+    font-weight: bold;
+}
+
+.datetime #date {
+    font-weight: bold;
+}
+
+@media screen and (max-width: 600px) {
+    .Board {
+        display: flex;
+        flex-direction: column;
+        width: 90vw;
+        height: 85vh;
+        min-width: 350px;
+    }
+    .left {
+        height: 25vh;
+        border-radius: 1rem 1rem 0rem 0rem;
+    }
+    .image-overlay-bottom {
+        transform: translateY(2rem);
+    }
+}
+
+.right {
+    /* width: 20vw; */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.right_top {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 22vh;
+}
+
+.weather_icon_container {
+    height: 15vh;
+    display: flex;
+    justify-content: center;
+}
+
+#weather_icon {
+    width: 15vh;
+    transition: 0.3s ease-in-out;
+}
+
+#weather_icon:hover {
+    transform: scale(1.03);
+}
+
+.right_mid {
+    width: 100%;
+}
+
+.weather_details_container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2rem;
+    padding-right: 1rem;
+    height: 3rem;
+    padding-bottom: 0.4rem;
+    border-radius: 5px;
+    background-color: #e0e0e0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    transition: 0.3s ease-in-out;
+}
+
+.weather_details_container:hover {
+    transform: scale(1.03);
+}
+
+.weather_details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    font-weight: bold;
+}
+
+.weather_details_name {
+    font-weight: normal;
+    font-size: 0.7rem;
+    position: absolute;
+    width: 80px;
+    text-align: left;
+    transform: translate(-15px, 15px)
+}
+
+.solar {
+    height: auto;
+    background-color: rgb(73, 28, 234);
+    margin-top: 0.5rem;
+    color: white;
+    margin-left: 2rem;
+    margin-right: 2rem;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    transition: 0.5s ease-in-out;
+}
+
+.solar:hover {
+    transform: scale(1.02);
+}
+
+.solar div {
+    text-align: right;
+}
+
+.solar div p,
+h1 {
+    font-weight: bold;
+    margin: 0.5rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0rem;
+}
+
+.solar h3 {
+    margin: 0rem;
+    margin-bottom: 0.5rem;
+    padding-right: 0.5rem;
+    float: right;
+}
+
+.pct_saving {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding-right: 0.5rem;
+}
+
+.pct_saving text {
+    font-weight: bold;
+    font-size: 0.7rem;
+}
+
+#asterisk {
+    font-size: 0.6rem;
+    font-style: italic;
+    text-align: left;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 0.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 1.5rem;
+}
