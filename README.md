@@ -13,7 +13,7 @@ Our intuition was that the leading factors causing variation in solar panel powe
 
 Unfortunately, we were not able to find a usable dataset that provided solar panel power outputs for different locations across California. To overcome this limitation, we chose to use solar irradiance as the target variable instead. Solar irradiance, measured in W/m^2, is the measure of the incident solar energy per unit area, per second. This metric maps nearly linearly to solar panel power output using the following equation,
 
-![My image](images.power_formula.png)
+![My image](/images/power_formula.png?raw=true "TEST")
 
 Therefore, by building a machine learning model that can predict solar irradiance, we can directly compute the solar panel power output estimations. Fortunately, the Visual Crossing API also provided solar irradiance as one of its features, which we collected and stored alongside the weather related features.
 
