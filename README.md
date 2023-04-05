@@ -54,7 +54,7 @@ Number of workers: 2-5
 
 2. Date Embeddings: In order for the model to be able to use the observation date as a feature, we needed to numerically quantify it. We chose to do this by encoding the date into a unit circle, where the embedded coordinates were (cos(t), sin(t)), where t is the embedding angle. The diagram below shows how the embedding angle is simply the proportion through the year. By doing this we are able to separate out summer and winter observations.
 
-![Image](/images/date_embedding.png?raw=true)
+![Image](/images/day_embedding.png?raw=true)
 
 3. Time Embeddings: Similar to the date embeddings, we wanted to model to be able to use the time of day as one of its features. We used the same embedding method, except we set the embedding angle to be the fraction of the day that had already passed.
 
