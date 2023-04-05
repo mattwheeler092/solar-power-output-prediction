@@ -21,7 +21,7 @@ Therefore, by building a machine learning model that can predict solar irradianc
 Our final dataset consisted of 3,941,550 observations, each of which had values for 59 weather features and the target solar irradiance feature. The main analytics goal was to see if this data could be used to accurately predict solar radiation. 
 
 
-## Overview of Data Engineering Pipeline
+## Data Engineering Pipeline ([Code Link](https://github.com/mattwheeler092/solar-power-output-prediction/blob/main/etl_pipeline/airflow_dag.py))
 The first step of the data engineering pipeline was to determine which locations within California to collect weather data for. We used the US Cities dataset from Kaggle to find the latitude, longitude, and population of the 1200 towns and cities within California. 
 
 
@@ -85,7 +85,7 @@ From the figure, we can see that the feature “time_sunset_sunrise”, which wa
 
 ![Image](/images/feature_importance.png?raw=true)
 
-## Applications of the model
+## Applications of the model ([Code Link](https://github.com/mattwheeler092/solar-power-output-prediction/tree/main/app))
 
 ![Image](/images/app_design.png?raw=true)
 
