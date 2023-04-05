@@ -1,7 +1,7 @@
-# solar-power-output-prediction
+# Solar Power Energy Savings Web App 
 
-# Predicting solar radiation using weather data
-
+![Image](/images/app_screenshot.png?raw=true)
+Website App [Link](https://monumental-sunshine-088b65.netlify.app/)
 
 ## Motivation
 Often when people are considering purchasing and installing solar panels, the potential cost benefits can be ambiguous. Someone living in sunny Los Angeles will see more energy savings than someone living in cloudy Seattle. The question that we set out to answer using machine learning was: can we get accurate energy saving estimates for specific locations across California? 
@@ -87,7 +87,11 @@ From the figure, we can see that the feature “time_sunset_sunrise”, which wa
 
 ## Applications of the model
 
+![Image](/images/app_design.png?raw=true)
+
 A simple web application (Demo link) was developed to serve the machine learning model. The frontend was built using ReactJS, providing a user-friendly interface that enables users to select a location. Upon selecting a location, an API request is sent to the Visual Crossing API to fetch the current weather conditions, such as precipitation and humidity, which are then displayed on the frontend. Based on the selected location, the model, which is deployed on a web server using FastAPI, will predict the annual electricity bill saving. 
+
+![Image](/images/app_screenshot.png?raw=true)
 
 At the time of writing this report, the application has limited functionalities and the model’s predictions are based on various assumptions on household energy consumption and energy cost, among other things. Additional functionalities could be developed in future work to enhance this application:
 Automatically select the city that is closest to the user based on IP address
